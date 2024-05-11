@@ -1,0 +1,16 @@
+{
+    "name": "Simplex",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3f0803b75599d9e4fa1ab9828a5778ba"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
