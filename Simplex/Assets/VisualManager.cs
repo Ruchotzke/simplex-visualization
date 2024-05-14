@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using GK;
 using Matrices;
 using Simplex;
 using UnityEngine;
@@ -25,6 +26,8 @@ public class VisualManager : MonoBehaviour
     private List<Vector3> cornerPoints = new List<Vector3>();
     private Vector3 optimal;
 
+    public MeshFilter HullMesh;
+
     private void Start()
     {
         Matrix constraints = new Matrix("1 0 0; 0 1 0; 0 0 1;");
@@ -39,22 +42,33 @@ public class VisualManager : MonoBehaviour
             var d = new Dictionary(constraints, bounds, objective, partition.B, partition.N, 3);
             dictionaries.Add(d);
 
-            // Debug.Log("Dict B: " + string.Join(" ", d.Basic) + "   Point: " + d.Point);
-            // Debug.Log("Feasible: " + d.IsFeasible + " Optimal: " + d.IsOptimal + " Unbounded: " + d.IsUnbounded);
-            // Debug.Log(d.Message);
-            
             if (d.IsFeasible)
             {
                 if (d.IsOptimal)
                 {
+                    cornerPoints.Add(d.Point);
                     optimal = d.Point;
                 }
                 else
                 {
-                    cornerPoints.Add(d.Point);
+                    if(!cornerPoints.Contains(d.Point)) cornerPoints.Add(d.Point);
                 }
             }
         }
+        
+        /* Compute the feasible region (a convex hull) from the points */
+        ConvexHullCalculator c = new ConvexHullCalculator();
+        List<Vector3> verts = new List<Vector3>();
+        List<int> indices = new List<int>();
+        List<Vector3> norms = new List<Vector3>();
+        c.GenerateHull(cornerPoints, false, ref verts, ref indices, ref norms);
+
+        Mesh mesh = new Mesh();
+        mesh.SetVertices(verts);
+        mesh.SetIndices(indices, MeshTopology.Triangles, 0);
+        mesh.SetNormals(norms);
+
+        HullMesh.mesh = mesh;
     }
 
 
