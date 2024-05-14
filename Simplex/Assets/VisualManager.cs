@@ -30,12 +30,20 @@ public class VisualManager : MonoBehaviour
 
     private void Start()
     {
-        Matrix constraints = new Matrix("1 0 0; 0 1 0; 0 0 1;");
-        Matrix bounds = new Matrix("3; 3; 3;");
-        Matrix objective = new Matrix("-1; -1; -1;");
+        // Matrix constraints = new Matrix("1 0 0; 0 1 0; 0 0 1;");
+        // Matrix bounds = new Matrix("3; 3; 3;");
+        // Matrix objective = new Matrix("-1; -1; -1;");
+        
+        // Matrix constraints = new Matrix("1 1 1; 2 4 1; 1 1 3; 0 1 1;");
+        // Matrix bounds = new Matrix("30; 20; 40; 10;");
+        // Matrix objective = new Matrix("1; 1; 1;");
+        
+        Matrix constraints = new Matrix("1 0 1; 0.3 0 1; 1 0 0.3; 0.2 1 0.2; -0.2 1 -0.2;");
+        Matrix bounds = new Matrix("30; 25; 25; 30; 0;");
+        Matrix objective = new Matrix("1; 1; 1;");
         
         /* Generate all partitions */
-        var partitions = SimplexUtilities.GenerateAllPartitions(3, 3);
+        var partitions = SimplexUtilities.GenerateAllPartitions((int) constraints.Size.cols, (int) constraints.Size.rows);
         List<Dictionary> dictionaries = new List<Dictionary>();
         foreach (var partition in partitions)
         {
