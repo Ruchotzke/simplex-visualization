@@ -19,7 +19,7 @@ public class SimplexTests
         List<int> basic = new List<int>() { 0, 1 };
         List<int> nonBasic = new List<int>() { 2, 3, 4 };
 
-        Dictionary d = new Dictionary(A, b, c, basic, nonBasic);
+        Dictionary d = new Dictionary(A, b, c, basic, nonBasic, 3);
         Debug.Log(d.Message);
     }
     
@@ -33,7 +33,7 @@ public class SimplexTests
         List<int> basic = new List<int>() { 2, 3, 4};
         List<int> nonBasic = new List<int>() { 0, 1, 5 };
 
-        Dictionary d = new Dictionary(A, b, c, basic, nonBasic);
+        Dictionary d = new Dictionary(A, b, c, basic, nonBasic, 3);
         Debug.Log(d.Message);
     }
 }

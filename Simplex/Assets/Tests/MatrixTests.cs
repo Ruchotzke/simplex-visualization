@@ -250,4 +250,24 @@ public class MatrixTests
         
         Assert.IsTrue(new Matrix("1 3; 4 6; 7 9;") == c);
     }
+
+    [Test]
+    public void MatrixSolveSwapping()
+    {
+        Matrix m = new Matrix("0 0 1; 1 0 0; 0 1 0;");
+        Matrix b = new Matrix("1; 0; 0;");
+
+        Matrix solved = m.Solve(b);
+        
+        Assert.IsTrue(new Matrix("0; 0; 1;") == solved);
+    }
+    
+    [Test]
+    public void MatrixInverseSwapping()
+    {
+        Matrix m = new Matrix("0 0 1; 1 0 0; 0 1 0;");
+        Matrix inv = m.Inverse();
+        
+        Assert.IsTrue(new Matrix("0 1 0; 0 0 1; 1 0 0;") == inv);
+    }
 }

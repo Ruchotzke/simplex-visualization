@@ -20,6 +20,8 @@ namespace Simplex
         public List<int> Basic;
         public List<int> NonBasic;
 
+        public Vector3 Point;
+
         public string Message;
         public bool IsValid = false;
         public bool IsBasic = false;
@@ -35,7 +37,7 @@ namespace Simplex
         /// <param name="c">The objective function.</param>
         /// <param name="B">The basic partition.</param>
         /// <param name="N">The non-basic partition.</param>
-        public Dictionary(Matrix A, Matrix b, Matrix c, List<int> B, List<int> N)
+        public Dictionary(Matrix A, Matrix b, Matrix c, List<int> B, List<int> N, int numVars)
         {
             /* Copy basic/non-basic */
             Basic = new List<int>();
@@ -44,7 +46,7 @@ namespace Simplex
             foreach (var entry in N) NonBasic.Add(entry);
             
             /* Generate the dictionary */
-            ProcessDictionary(A, b, c);
+            ProcessDictionary(A, b, c, numVars);
         }
 
         /// <summary>
@@ -53,9 +55,10 @@ namespace Simplex
         /// <param name="A">The coefficient matrix.</param>
         /// <param name="b">The bounds for the constraints.</param>
         /// <param name="c">The objective function.</param>
-        private void ProcessDictionary(Matrix A, Matrix b, Matrix c)
+        private void ProcessDictionary(Matrix A, Matrix b, Matrix c, int numVars)
         {
             /* Generate variables with slack */
+            Point = Vector3.one * Single.NaN;
             uint m = A.Size.rows;
             uint n = A.Size.cols;
             var aBar = A.ComposeHorizontal(Matrix.Identity(A.Size.rows));
@@ -115,6 +118,50 @@ namespace Simplex
 
             IsFeasible = true;
             
+            /* We are feasible: compute the corner point */
+            if (numVars == 2)
+            {
+                uint row = 0;
+                Point = Vector3.zero;
+                if (Basic.Contains(0))
+                {
+                    Point.x = BasicVarValues[row, 0];
+                    row++;
+                }
+
+                if (Basic.Contains(1))
+                {
+                    Point.y = BasicVarValues[row, 0];
+                    row++;
+                }
+            }
+            else if (numVars == 3)
+            {
+                uint row = 0;
+                Point = Vector3.zero;
+                if (Basic.Contains(0))
+                {
+                    Point.x = BasicVarValues[row, 0];
+                    row++;
+                }
+
+                if (Basic.Contains(1))
+                {
+                    Point.y = BasicVarValues[row, 0];
+                    row++;
+                }
+                
+                if (Basic.Contains(2))
+                {
+                    Point.z = BasicVarValues[row, 0];
+                    row++;
+                }
+            }
+            else
+            {
+                Debug.LogError("Unable to compute/store corner point of size " + numVars);
+            }
+            
             /* Optimality: Are all non-basic coeffs in zeta negative? */
             bool positive = false;
             for (uint col = 0; col < ZetaNonBasicVars.Size.cols; col++)
@@ -158,6 +205,7 @@ namespace Simplex
                 if (IsUnbounded)
                 {
                     /* TODO */
+                    return;
                 }
             }
         }

@@ -262,7 +262,25 @@ namespace Matrices
             /* Use multiplier method to decompose U into L and U */
             for (uint pivot = 0; pivot < U.Size.rows; pivot++)
             {
-                /* Make sure the matrix is not degenerate */
+                /* Make sure the matrix is not degenerate, try and swap */
+                if (U[pivot, pivot] == 0)
+                {
+                    for (uint swaprow = pivot + 1; swaprow < U.Size.rows; swaprow++)
+                    {
+                        if (U[swaprow, pivot] != 0.0f)
+                        {
+                            for (uint i = 0; i < U.Size.cols; i++)
+                            {
+                                (U[swaprow, i], U[pivot, i]) = (U[pivot, i], U[swaprow, i]);
+                                (L[swaprow, i], L[pivot, i]) = (L[pivot, i], L[swaprow, i]);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+                
+                /* If still zero, the matrix is degenerate */
                 if (U[pivot, pivot] == 0)
                 {
                     throw new Exception("Matrix state is degenerate, cannot finish triangulation.");
@@ -290,6 +308,23 @@ namespace Matrices
             
             /* Return the decomposition */
             return (L, U);
+        }
+
+        /// <summary>
+        /// Attempt to decompose this matrix to a diagonal. If successful, return true.
+        /// </summary>
+        /// <returns></returns>
+        public bool CanSolve()
+        {
+            try
+            {
+                Solve(new Matrix((Size.rows, 1)));
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -385,6 +420,35 @@ namespace Matrices
 
             return ab;
         }
+        
+        /// <summary>
+        /// Override for subtraction.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Matrix operator +(Matrix a, Matrix b)
+        {
+            /* Before anything, ensure sizing is correct */
+            if (a.Size.cols != b.Size.cols || a.Size.rows != b.Size.rows)
+            {
+                throw new Exception("Matrices cannot be subtracted. " + a.Size + " vs " + b.Size);
+            }
+            
+            /* Allocate a new matrix */
+            Matrix ab = new Matrix((a.Size.rows, b.Size.cols));
+            
+            /* Fill the matrix */
+            for (uint r = 0; r < ab.Size.rows; r++)
+            {
+                for (uint c = 0; c < ab.Size.cols; c++)
+                {
+                    ab[r, c] = a[r,c] + b[r,c];
+                }
+            }
+
+            return ab;
+        }
 
         /// <summary>
         /// Determine if two matrices are equal.
@@ -447,14 +511,38 @@ namespace Matrices
                 /* Calculate the starting row for this pivot */
                 uint row = pivot;
                 
+                /* if the pivot is zero, attempt to swap two rows */
+                if (m[row, pivot] == 0.0f)
+                {
+                    for (uint swaprow = row + 1; swaprow < Size.rows; swaprow++)
+                    {
+                        /* Check if we can use this row, and swap if so */
+                        if (m[swaprow, pivot] != 0.0f)
+                        {
+                            for (uint i = 0; i < Size.cols; i++)
+                            {
+                                (m[swaprow, i], m[row, i]) = (m[row, i], m[swaprow, i]);
+                            }
+
+                            for (uint c = 0; c < b.Size.cols; c++)
+                            {
+                                (b[swaprow, c], b[row, c]) = (b[row, c], b[swaprow, c]);
+                            }
+                            
+                            break;
+                        }
+                    }
+                }
+                
+                /* at this point, if the pivot is still zero, the matrix is degenerate */
+                if (m[row, pivot] == 0)
+                {
+                    throw new Exception("Matrix state is degenerate, cannot finish solving.");
+                }
+                
                 /* "fix" this row so the pivot is 1 */
                 if (m[row, pivot] != 1.0f)
                 {
-                    /* Before anything, if the pivot is zero, this matrix is degenerate */
-                    if (m[row, pivot] == 0)
-                    {
-                        throw new Exception("Matrix state is degenerate, cannot finish triangulation.");
-                    }
                     float divisor = m[row, pivot];
                     for (uint i = pivot; i < Size.cols; i++)        // update m
                     {
@@ -516,13 +604,21 @@ namespace Matrices
         public Matrix Inverse()
         {
             /* First make sure the matrix is invertible */
-            if (Size.rows != Size.cols || Determinant() == 0.0f)
+            if (Size.rows != Size.cols)
             {
-                throw new Exception("Unable to invert a non-singular or non-square matrix.");
+                throw new Exception("Unable to invert a non-square matrix.");
             }
             
             /* Solve a system with an identity */
-            return Solve(Identity(Size.rows));
+            try
+            {
+                return Solve(Identity(Size.rows));
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to invert a singular matrix.");
+            }
+            
         }
         
         /// <summary>
